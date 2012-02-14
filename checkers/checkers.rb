@@ -7,8 +7,7 @@ include Term::ANSIColor
 LOGGING = false
 SHOW_EVERY_MOVE = true
 MOVE_LIMIT = 1 # a hard limit on the total number of moves EACH player can make
-MINIMAX_DEPTH = 3
-
+MINIMAX_DEPTH = 2
 
 def tree_from_state(s, rw, depth, k)
   node = Tree::TreeNode.new("Node #{depth}-#{k}", s)
@@ -28,6 +27,7 @@ def tree_from_state(s, rw, depth, k)
   end
   log("\t> exit")
   
+  print_board(node.content)
   return node
 end
 
@@ -275,7 +275,9 @@ def main
   counter = 1
   for i in 1..MOVE_LIMIT
     if s != 0
-      s = traverse(tree_from_state(s, 0, MINIMAX_DEPTH, counter), 0)
+      s = traverse(tree_from_state(s, 0, 2, counter), 0)
+      
+      print_board(s)
       Process.exit
       last_s = s.clone unless s == 0
       
