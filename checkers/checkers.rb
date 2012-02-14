@@ -1,57 +1,13 @@
+require './util.rb'
+
 require 'tree'
 require 'term/ansicolor'
 include Term::ANSIColor
 
-# 0 - empty
-# 1 - red
-# 2 - white
-# 3 - kingred
-# 4 - kingwhite
-def s(a, b)
-  print s
-end
-
 LOGGING = false
 SHOW_EVERY_MOVE = true
-MOVE_LIMIT = 2 # a hard limit on the total number of moves EACH player can make
+MOVE_LIMIT = 1 # a hard limit on the total number of moves EACH player can make
 MINIMAX_DEPTH = 3
-
-def log(message)
-  if LOGGING
-    print "\n#{message}"
-  end
-end
-
-def print_board(s, move = nil)
-  print "\n"
-  
-  if move
-    print "Move #"
-    print bold(white("#{move}:\n\n"))
-  end
-  
-  print "    1 2 3 4 5 6 7 8\n   ----------------\n"
-  for i in 1..8
-    print "#{i} | "
-    for j in 1..8
-      k = s[[i, j]]
-      if k == 0
-        print blue("o")
-      elsif k == 1
-        print red("o")
-      elsif k == 2
-        print "o"
-      elsif k == 3
-        print red("O")
-      else
-        print "O"
-      end
-      print " "
-    end
-    print "\n"
-  end
-  print "\n"
-end
 
 
 def tree_from_state(s, rw, depth, k)
@@ -63,11 +19,14 @@ def tree_from_state(s, rw, depth, k)
       break
     end
     s = expand(s, rw == 0 ? 1 : 0, 0, count)
+    log("\t> s is #{s}")
     if s != 0
+      log("\t> adding s of #{s}")
       node << tree_from_state(s, rw, depth - 1, count)
     end
     count = count + 1
   end
+  log("\t> exit")
   
   return node
 end
@@ -78,7 +37,7 @@ def traverse(tree, rw)
   tree.children.each do |node|
     traverse(node, rw == 0 ? 1 : 0)
     s = node.content
-    v = rw == 1 ? board_value_one(s, rw) : board_value_two(s, rw)
+    v = rw == 1 ? board_value(s, rw) : board_value(s, rw)
     if v > max
       saved_s = s
       s_node = node
@@ -91,122 +50,9 @@ def traverse(tree, rw)
   s_node.content
 end
 
-def simulate_game
-  s = initialize_game
-  
-  print "\nInitialized game:\n"
-  print_board(s)
-  
-  counter = 1
-  for i in 1..MOVE_LIMIT
-    if s != 0
-      s = traverse(tree_from_state(s, 0, MINIMAX_DEPTH, counter), 0)
-      last_s = s.clone unless s == 0
-      
-      if SHOW_EVERY_MOVE
-        print_board(s, counter)
-      end
-      counter += 1
-
-      if s == 0
-        print bold("\nWhite wins!\n\n")
-      end
-      
-      s = traverse(tree_from_state(s, 1, MINIMAX_DEPTH, counter), 1)
-      last_s = s.clone unless s == 0
-      
-      if SHOW_EVERY_MOVE
-        print_board(s, counter)
-      end
-      counter += 1
-      
-      if s == 0
-        print bold("\nRed wins!\n\n")
-      end
-      
-      j = i
-    end
-  end
-  
-  if j == MOVE_LIMIT && s != 0
-    print bold("\nMove limit reached before either player won.\n\n")
-  end
-    
-  print "Total Moves: #{j * 2}\n\nFinal state:\n"
-  print_board(last_s)
-  
-  s
-end
-
-def empty_board
-  s = Hash.new
-  for x in 1..8
-    for y in 1..8
-      s[[x,y]] = 0
-    end
-  end
-  s
-end
-
-def initialize_game
-  s = empty_board
-  
-  for b in 1..8
-    for a in 1..3
-      if (a + b) % 2 == 1
-        s[[a,b]] = 1
-      end
-    end
-    for a in 6..8
-      if (a + b) % 2 == 1
-        s[[a,b]] = 2
-      end
-    end
-  end
-  # 
-  # s[[1, 2]] = 0
-  # s[[1, 4]] = 0
-  # s[[1, 6]] = 0
-  # s[[2, 1]] = 0
-  # s[[2, 3]] = 0
-  # s[[2, 5]] = 0
-  # s[[3, 2]] = 0
-  # s[[3, 6]] = 0
-  # s[[3, 8]] = 0
-  # s[[3, 4]] = 3
-  # s[[4, 3]] = 3
-  # s[[2, 7]] = 3
-  # s[[4, 7]] = 1
-  # s[[5, 2]] = 4
-  # s[[5, 8]] = 4
-  # s[[7, 2]] = 4
-  # s[[7, 4]] = 4
-  # s[[8, 7]] = 4
-  # s[[6, 1]] = 0
-  # s[[6, 3]] = 0
-  # s[[6, 5]] = 0
-  # s[[6, 7]] = 0
-  # s[[7, 6]] = 0
-  # s[[7, 8]] = 0
-  # s[[8, 1]] = 0
-  # s[[8, 3]] = 0
-  # s[[8, 5]] = 0
-  # s[[1, 8]] = 0
-  s
-end
-
-def is_legal_square?(a, b)
-  (a + b) % 2 == 1
-end
-
-def move(s, from_x, from_y, to_x, to_y)
-  from = s[[from_x, from_y]]
-  s[[to_x, to_y]] = from
-  s[[from_x, from_y]] = 0
-  s
-end
-
 def expand(s, rw, move_num, pick_move_num)
+  log("\t> expanding")
+  
   last_move = 0
   list_of_moves = 0
   jump = 0
@@ -224,14 +70,12 @@ def expand(s, rw, move_num, pick_move_num)
   end
   
   if jump == 0
-    #print "\njump 0"
     if list_of_moves != 0
       move = evaluate_moves(list_of_moves, pick_move_num)
     else
       s = 0
     end
   else
-    #print "\nno jump 0"
     move = evaluate_moves(list_of_moves, pick_move_num)
   end
   
@@ -242,6 +86,8 @@ def expand(s, rw, move_num, pick_move_num)
   end
   
   new_s = s != 0 ? simulate_move(s, move[0], move[1], move[2], move[3], rw) : 0
+  
+  log("\t> expanded, move: #{move}")
   
   new_s
 end
@@ -327,6 +173,7 @@ def check_move(s, a, b, aa, bb, d, jump, list_of_moves, rw, fb)
     :list_of_moves => list_of_moves
   }
   log("  > check result: \n\t#{result}")
+  
   result
 end
 
@@ -374,7 +221,7 @@ end
 
 def evaluate_moves(list_of_moves, num)
   if num > list_of_moves.length - 1
-    return list_of_moves[num]
+    return 0
   end
   list_of_moves[num]
 end
@@ -393,13 +240,13 @@ def minimax(s, rw, depth, v)
       bv = board_value(s, rw)
       v = minimax(s, rw, depth - 1, v)
     end
-  end 
+  end
   
   v
 end
 
 # Finds the value for a specific state of the board for a player
-def board_value_one(s, rw)
+def board_value(s, rw)
   value = 0
   for i in 1..8
     for j in 1..8
@@ -419,59 +266,53 @@ def board_value_one(s, rw)
   value        
 end
 
-def board_value_two(s, rw)
-  value = 0
-  for i in 1..8
-    for j in 1..8
-      if s[[i, j]] == rw + 1
-        # regular pieces worh 1 point
-        value = value + 1
-      elsif s[[i, j]] == rw + 2
-        value = value - 1
-      elsif s[[i, j]] == rw + 3
-        # kings worth 2 points
-        value = value + 3
-      elsif s[[i, j]] == rw + 4
-        value = value - 3
+def main
+  s = initialize_game
+  
+  print "\nInitialized game:\n"
+  print_board(s)
+  
+  counter = 1
+  for i in 1..MOVE_LIMIT
+    if s != 0
+      s = traverse(tree_from_state(s, 0, MINIMAX_DEPTH, counter), 0)
+      Process.exit
+      last_s = s.clone unless s == 0
+      
+      if SHOW_EVERY_MOVE
+        print_board(s, counter)
       end
+      counter += 1
+
+      if s == 0
+        print bold("\nWhite wins!\n\n")
+      end
+      
+      s = traverse(tree_from_state(s, 1, MINIMAX_DEPTH, counter), 1)
+      last_s = s.clone unless s == 0
+      
+      if SHOW_EVERY_MOVE
+        print_board(s, counter)
+      end
+      counter += 1
+      
+      if s == 0
+        print bold("\nRed wins!\n\n")
+      end
+      
+      j = i
     end
   end
-  value        
-end
-
-def max_value(state)
-  if terminal_test(state)
-    return utility(state)
+  
+  if j == MOVE_LIMIT && s != 0
+    print bold("\nMove limit reached before either player won.\n\n")
   end
-  v = 0
-  for a, s in successors(state) do
-    v = max(v, min_value(s))
-  end
-  v
-end
-
-def min_value(state)
-  if terminal_test(state)
-    return utility(state)
-  end
-  v = 0
-  for a, s in successors(state) do
-    v = min(v, max_value(s))
-  end
-  v
-end
-
-def num_pieces(s, type)
-  sum = 0
-  for i in 1..8
-    for j in 1..8
-      if s[[i, j]] == type
-        sum = sum + 1
-      end
-    end
-  end
-  sum
+    
+  print "Total Moves: #{j * 2}\n\nFinal state:\n"
+  print_board(last_s)
+  
+  s
 end
 
 # Main
-simulate_game
+main
