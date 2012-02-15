@@ -37,7 +37,7 @@ class Board
   end
   
   def get(x, y)
-    squares[[x, y]].value
+    squares[[x, y]]
   end
   
   def legal_square?(x, y)
@@ -45,7 +45,7 @@ class Board
   end
   
   def red_prince_squares
-    squares.select { |k, v| v.red? }.keys
+    squares.select { |k, v| v.red_prince? }.keys
   end
   
   def red_king_squares
@@ -53,11 +53,11 @@ class Board
   end
   
   def red_squares
-    squares.select { |k, v| v.red? or v.red_king? }.keys
+    squares.select { |k, v| v.red? }.keys
   end
   
   def white_prince_squares
-    squares.select { |k, v| v.white? }.keys
+    squares.select { |k, v| v.white_prince? }.keys
   end
   
   def white_king_squares
@@ -65,7 +65,7 @@ class Board
   end
   
   def white_squares
-    squares.select { |k, v| v.white? or v.white_king? }.keys
+    squares.select { |k, v| v.white? }.keys
   end
   
   def red_value
@@ -77,12 +77,12 @@ class Board
   end
   
   def neighbors(x, y)
-    [
-      (((x - 1) >= 1) and ((y - 1) >= 1)) ? [x - 1, y - 1] : 0,
-      (((x - 1) >= 1) and ((y + 1) <= 8)) ? [x - 1, y + 1] : 0,
-      (((x + 1) <= 8) and ((y + 1) <= 8)) ? [x + 1, y + 1] : 0,
-      (((x + 1) <= 8) and ((y - 1) >= 1)) ? [x + 1, y - 1] : 0
-    ]
+    {
+      :northwest  => (((x - 1) >= 1) and ((y - 1) >= 1)) ? [x - 1, y - 1] : 0,
+      :northeast  => (((x - 1) >= 1) and ((y + 1) <= 8)) ? [x - 1, y + 1] : 0,
+      :southeast  => (((x + 1) <= 8) and ((y + 1) <= 8)) ? [x + 1, y + 1] : 0,
+      :southwest  => (((x + 1) <= 8) and ((y - 1) >= 1)) ? [x + 1, y - 1] : 0
+    }
   end
   
   # 
@@ -103,6 +103,86 @@ class Board
     #   
     # end
   
+  def jump_destination(from_x, from_y, over_x, over_y)
+    over_neighbors = neighbors(over_x, over_y)
+    
+    if from_x < over_x
+      if from_y < over_y # northwest -> southeast
+        destination = over_neighbors[:southeast]
+      else # northeast -> southwest
+        destination = over_neighbors[:southwest]
+      end
+    else
+      if from_y < over_y # southwest -> northeast
+        destination = over_neighbors[:northeast]
+      else # southeast -> northwest
+        destination = over_neighbors[:northwest]
+      end
+    end
+    
+    destination
+  end
+  
+  def check_jumps_on(from_x, from_y, over_x, over_y)
+    from = get(from_x, from_y)
+    over = get(over_x, over_y)
+    destination = jump_destination(from_x, from_y, over_x, over_y)
+    
+    if destination == 0 or !get(destination[0], destination[1]).empty?
+      return false
+    end
+    
+    if (from.red? and over.white?) or (from.white? and over.red?)
+      return destination
+    end
+    
+    false
+  end
+  
+  def moves_for_square(x, y)
+    square = get(x, y)
+    neighbors = neighbors(x, y)
+    moves = []
+    
+    if square.red?
+      if !square.king?
+        neighbors.delete(:northwest)
+        neighbors.delete(:northeast)
+      end
+    elsif square.white?
+      if !square.king?
+        neighbors.delete(:southwest)
+        neighbors.delete(:southeast)
+      end
+    else
+      # throw error
+    end
+    
+    neighbors.values.each do |neighbor|
+      if neighbor != 0
+        neighbor_square = get(neighbor[0], neighbor[1])
+        if neighbor_square.empty?
+          moves << [x, y, neighbor[0], neighbor[1]]
+        elsif check_jumps_on(x, y, neighbor[0], neighbor[1])
+          move = check_jumps_on(x, y, neighbor[0], neighbor[1])
+          moves << [x, y, move[0], move[1]]
+        end
+      end
+    end
+    
+    moves
+  end
+  
+  # def moves_for_square(x, y)
+  #   square = get(x, y)
+  #   neighbors = neighbors(x, y)
+  #   
+  #   neighbors.each do |neighbor|
+  #     
+  #   end
+  #   
+  # end
+  # 
   def exploit_moves(s, a, b, list_of_moves, jump, rw)
     result = {
       :jump => jump,
