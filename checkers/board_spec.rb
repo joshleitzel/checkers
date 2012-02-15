@@ -57,6 +57,13 @@ describe Board do
         @board.jump_destination(3, 4, 2, 5).should == [1, 6]
       end
       
+      it "should find the leapfrogs (squares to be jumped over)" do
+        @board.leapfrog(1, 2, 3, 4).should == [2, 3]
+        @board.leapfrog(3, 4, 1, 2).should == [2, 3]
+        @board.leapfrog(3, 2, 1, 4).should == [2, 3]
+        @board.leapfrog(1, 4, 3, 2).should == [2, 3]
+      end
+      
       it "should check the jumps" do
         @board.check_jumps_on(3, 2, 4, 3).should == false
         @board.set(4, 3, CODE_RED)

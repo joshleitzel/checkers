@@ -188,25 +188,6 @@ def add_move_to_list(list_of_moves, from_x, from_y, to_x, to_y)
   list_of_moves
 end
 
-def neighbor_list(a, b)
-  n1 = (((a - 1) >= 1) and ((b - 1) >= 1)) ? [a - 1, b - 1] : 0 
-  n2 = (((a - 1) >= 1) and ((b + 1) <= 8)) ? [a - 1, b + 1] : 0
-  n3 = (((a + 1) <= 8) and ((b + 1) <= 8)) ? [a + 1, b + 1] : 0
-  n4 = (((a + 1) <= 8) and ((b - 1) >= 1)) ? [a + 1, b - 1] : 0
-  [n1, n2, n3, n4]
-end
-
-# d - diagonal, 0 or 1
-def neighbor(a, b, d, rw, fb)
-  neighbor = (rw + fb) % 2 # 1 - redforward, whitebackward; 0 - redbackward, whiteforward
-  neighbor_list = neighbor_list(a, b)
-  if d == 0
-    return neighbor != 0 ? neighbor_list[2] : neighbor_list[0]
-  elsif d == 1
-    return neighbor != 0 ? neighbor_list[3] : neighbor_list[1]
-  end
-end
-
 def simulate_move(s, from_x, from_y, to_x, to_y, rw)
   s2 = s.clone
   s2[[from_x, from_y]] = 0

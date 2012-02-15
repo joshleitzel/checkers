@@ -173,49 +173,33 @@ class Board
     moves
   end
   
-  # def moves_for_square(x, y)
-  #   square = get(x, y)
-  #   neighbors = neighbors(x, y)
-  #   
-  #   neighbors.each do |neighbor|
-  #     
-  #   end
-  #   
-  # end
-  # 
-  def exploit_moves(s, a, b, list_of_moves, jump, rw)
-    result = {
-      :jump => jump,
-      :list_of_moves => list_of_moves
-    }
-
-    if s[[a, b]] == 3 + rw
-      # king, check backward first
-      for d in [0, 1]
-        neighbor = neighbor(a, b, d, rw, 0)
-        if neighbor != 0
-          result = check_move(s, a, b, neighbor[0], neighbor[1], d, jump, list_of_moves, rw, 0)
-          list_of_moves = result[:list_of_moves]
-          jump = result[:jump]
-        end
+  def leapfrog(from_x, from_y, to_x, to_y)
+    from_neighbors = neighbors(from_x, from_y)
+    
+    if from_x < to_x
+      if from_y < to_y # northwest -> southeast
+        square = from_neighbors[:southeast]
+      else # northeast -> southwest
+        square = from_neighbors[:southwest]
+      end
+    else
+      if from_y < to_y # southwest -> northeast
+        square = from_neighbors[:northeast]
+      else # southeast -> northwest
+        square = from_neighbors[:northwest]
       end
     end
 
-    if (s[[a, b]] == 1 + rw) or (s[[a, b]] == 3 + rw)
-      for d in [0, 1]
-        neighbor = neighbor(a, b, d, rw, 1)
-        if neighbor != 0
-          result = check_move(s, a, b, neighbor[0], neighbor[1], d, jump, list_of_moves, rw, 1)
-          list_of_moves = result[:list_of_moves]
-          jump = result[:jump]
-          log("  > result: \n\t#{result.inspect}")
-        end
-      end
+    square
+  end
+  
+  def move(from_x, from_y, to_x, to_y)
+    set(to_x, to_y, get(from_x, from_y).value)
+    set(from_x, from_y, CODE_EMPTY)
+    if (from_y - to_y).abs > 1 # jump was made
+      print "here"
+      set
     end
-    return {
-      :jump => jump,
-      :list_of_moves => list_of_moves
-    }
   end
   
   def display
