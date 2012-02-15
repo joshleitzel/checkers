@@ -32,6 +32,16 @@ class Board
     s
   end
   
+  def serial
+    serial = {}
+    for y in 1..8
+      for x in 1..8
+        serial[[x, y]] = get(x, y).value
+      end
+    end
+    serial
+  end
+  
   def set(x, y, value)
     squares[[x, y]].value = value
   end
@@ -84,24 +94,6 @@ class Board
       :southwest  => (((x + 1) <= 8) and ((y - 1) >= 1)) ? [x + 1, y - 1] : 0
     }
   end
-  
-  # 
-  # # d - diagonal, 0 or 1
-  # def neighbor(a, b, d, rw, fb)
-  #   neighbor = (rw + fb) % 2 # 1 - redforward, whitebackward; 0 - redbackward, whiteforward
-  #   neighbor_list = neighbor_list(a, b)
-  #   if d == 0
-  #     return neighbor != 0 ? neighbor_list[2] : neighbor_list[0]
-  #   elsif d == 1
-  #     return neighbor != 0 ? neighbor_list[3] : neighbor_list[1]
-  #   end
-  # end
-    # 
-    # def find_moves_for_square(x, y)
-    #   square = get(x, y)
-    #   
-    #   
-    # end
   
   def jump_destination(from_x, from_y, over_x, over_y)
     over_neighbors = neighbors(over_x, over_y)
@@ -189,17 +181,24 @@ class Board
         square = from_neighbors[:northwest]
       end
     end
-
+    
     square
   end
   
   def move(from_x, from_y, to_x, to_y)
-    set(to_x, to_y, get(from_x, from_y).value)
+    from = get(from_x, from_y)
+    
+    # king promotion
+    val = (from.white_prince? and to_x == 1) ? CODE_WHITE_KING : from.value
+    val = (from.red_prince? and to_x == 8) ? CODE_RED_KING : val
+    
+    set(to_x, to_y, val)
     set(from_x, from_y, CODE_EMPTY)
     if (from_y - to_y).abs > 1 # jump was made
-      print "here"
-      set
+      jump_square = leapfrog(from_x, from_y, to_x, to_y)
+      set(jump_square[0], jump_square[1], CODE_EMPTY)
     end
+    self
   end
   
   def display
