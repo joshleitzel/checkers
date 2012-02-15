@@ -76,6 +76,33 @@ class Board
     white_prince_squares.length + white_king_squares.length * 2 - red_prince_squares.length - red_king_squares.length * 2
   end
   
+  def neighbors(x, y)
+    [
+      (((x - 1) >= 1) and ((y - 1) >= 1)) ? [x - 1, y - 1] : 0,
+      (((x - 1) >= 1) and ((y + 1) <= 8)) ? [x - 1, y + 1] : 0,
+      (((x + 1) <= 8) and ((y + 1) <= 8)) ? [x + 1, y + 1] : 0,
+      (((x + 1) <= 8) and ((y - 1) >= 1)) ? [x + 1, y - 1] : 0
+    ]
+  end
+  
+  # 
+  # # d - diagonal, 0 or 1
+  # def neighbor(a, b, d, rw, fb)
+  #   neighbor = (rw + fb) % 2 # 1 - redforward, whitebackward; 0 - redbackward, whiteforward
+  #   neighbor_list = neighbor_list(a, b)
+  #   if d == 0
+  #     return neighbor != 0 ? neighbor_list[2] : neighbor_list[0]
+  #   elsif d == 1
+  #     return neighbor != 0 ? neighbor_list[3] : neighbor_list[1]
+  #   end
+  # end
+    # 
+    # def find_moves_for_square(x, y)
+    #   square = get(x, y)
+    #   
+    #   
+    # end
+  
   def exploit_moves(s, a, b, list_of_moves, jump, rw)
     result = {
       :jump => jump,
