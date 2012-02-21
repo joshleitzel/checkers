@@ -6,4 +6,9 @@ class Game
   def initialize
     self.board = Board.new
   end
+  
+  def play
+    # red plays first
+    
+  end
 end

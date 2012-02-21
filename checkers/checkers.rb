@@ -147,36 +147,6 @@ def exploit_moves(s, a, b, list_of_moves, jump, rw)
   }
 end
 
-def check_move(s, a, b, aa, bb, d, jump, list_of_moves, rw, fb)
-  log("Checking: from [#{a}, #{b}] to [#{aa}, #{bb}]; current: [#{s[[aa, bb]]}]; player: [#{rw}], jump: #{jump}")
-  if s[[aa, bb]] == 0 and jump == 0
-    log("  > empty")
-    ss = simulate_move(s, a, b, aa, bb, rw)
-    list_of_moves = add_move_to_list(list_of_moves, a, b, aa, bb)
-  elsif (s[[aa, bb]] == 2 - rw) or (s[[aa, bb]] == 4 - rw)
-    # opposite piece
-    log("  > opposite piece")
-    neighbor = neighbor(aa, bb, d, rw, fb)
-    if neighbor != 0 and s[[neighbor[0], neighbor[1]]] == 0
-      if jump == 0
-        jump = 1
-        list_of_moves = 0
-      end
-      list_of_moves = make_jump(s, a, b, aa, bb, neighbor[0], neighbor[1], jump, list_of_moves, rw)
-    end
-  else
-    log("  > nothing to do here")
-  end
-  
-  result = {
-    :jump => jump,
-    :list_of_moves => list_of_moves
-  }
-  log("  > check result: \n\t#{result}")
-  
-  result
-end
-
 def add_move_to_list(list_of_moves, from_x, from_y, to_x, to_y)
   move = [from_x, from_y, to_x, to_y]
   

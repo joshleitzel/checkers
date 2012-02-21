@@ -9,4 +9,8 @@ describe Game do
   it "should create a new game" do
     @game.board.should_not == nil
   end
+  
+  it "should play a game" do
+    @game.play
+  end
 end

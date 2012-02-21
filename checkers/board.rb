@@ -131,6 +131,16 @@ class Board
     false
   end
   
+  def moves_for_player(red_or_white)
+    moves = []
+    squares = red_or_white == 'red' ? red_squares : white_squares
+    squares.each do |square|
+      moves_for_square = moves_for_square(square[0], square[1])
+      moves << moves_for_square unless moves_for_square.length == 0
+    end
+    moves.flatten(1)
+  end
+  
   def moves_for_square(x, y)
     square = get(x, y)
     neighbors = neighbors(x, y)
