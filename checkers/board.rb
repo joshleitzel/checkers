@@ -1,22 +1,45 @@
+require 'tree'
 require 'term/ansicolor'
 include Term::ANSIColor
 
 class Board
   attr_accessor :squares
   
-  def initialize
-    s = empty_board
-    for b in 1..8
-      for a in 1..3
-        if (a + b) % 2 == 1
-          s[[a,b]] = Square.new(CODE_RED)
+  MAX_PIECES_PER_PLAYER = 12
+  
+  # Superficial method to verify that the board is in a valid configuration
+  def valid?
+    if red_squares.length > MAX_PIECES_PER_PLAYER or white_squares.length > MAX_PIECES_PER_PLAYER
+      return false
+    end
+    
+    for x in 1..8
+      for y in 1..8
+        if x + y % 2 == 0 and squares[[x, y]] != 0
+          return false
         end
       end
-      for a in 6..8
-        if (a + b) % 2 == 1
-          s[[a,b]] = Square.new(CODE_WHITE)
+    end
+    true
+  end
+  
+  def initialize(squares)
+    if squares == nil
+      s = empty_board
+      for b in 1..8
+        for a in 1..3
+          if (a + b) % 2 == 1
+            s[[a,b]] = Square.new(CODE_RED)
+          end
+        end
+        for a in 6..8
+          if (a + b) % 2 == 1
+            s[[a,b]] = Square.new(CODE_WHITE)
+          end
         end
       end
+    else
+      s = squares
     end
     
     self.squares = s
@@ -209,6 +232,31 @@ class Board
       set(jump_square[0], jump_square[1], CODE_EMPTY)
     end
     self
+  end
+  
+  def advance(player)
+    self
+  end
+  
+  def opposite_player(player)
+    player == 'red' ? 'white' : 'red'
+  end
+  
+  def minimax_tree(player, depth, state, i)
+    state ||= squares
+    
+    node = Tree::TreeNode.new("root #{player} - #{depth} - #{i}", state)
+    
+    if depth == 0
+      return node
+    end
+    
+    moves_for_player(player).each do |move|
+      node << minimax_tree(opposite_player(player), depth - 1, Board.new(state).move(move[0], move[1], move[2], move[3]).squares, i)
+      i = i + 1
+    end
+    
+    node
   end
   
   def display

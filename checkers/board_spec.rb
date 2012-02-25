@@ -3,7 +3,7 @@ require './board.rb'
 
 describe Board do
   before(:each) do
-    @board = Board.new
+    @board = Board.new(nil)
   end
   
   describe "Basic" do
@@ -18,6 +18,11 @@ describe Board do
         [1, 7]=>0, [2, 7]=>1, [3, 7]=>0, [4, 7]=>0, [5, 7]=>0, [6, 7]=>2, [7, 7]=>0, [8, 7]=>2,
         [1, 8]=>1, [2, 8]=>0, [3, 8]=>1, [4, 8]=>0, [5, 8]=>0, [6, 8]=>0, [7, 8]=>2, [8, 8]=>0
       }
+    end
+    
+    it "should find the opposite player" do
+      @board.opposite_player('red').should == 'white'
+      @board.opposite_player('white').should == 'red'
     end
   end
   
@@ -159,7 +164,6 @@ describe Board do
       end
       
       it "should make the moves" do
-        @board.display
         @board.move(2, 7, 1, 6).serial.should == {
           [1, 1]=>0, [2, 1]=>0, [3, 1]=>0, [4, 1]=>0, [5, 1]=>0, [6, 1]=>0, [7, 1]=>0, [8, 1]=>0,
           [1, 2]=>0, [2, 2]=>0, [3, 2]=>0, [4, 2]=>0, [5, 2]=>4, [6, 2]=>0, [7, 2]=>4, [8, 2]=>0,
@@ -246,6 +250,22 @@ describe Board do
       
       @board.red_value.should == 4
       @board.white_value.should == -4
+    end
+  end
+  
+  describe "Advancing (taking a turn)" do
+    it "should advance the board with red" do
+      @board.advance('red').valid?.should == true
+    end
+    
+    it "should advance the board with white" do
+      @board.advance('white').valid?.should == true
+    end
+    
+    it "should build the minimax tree" do
+      print "\n\n"
+      @board.minimax_tree('red', 6, nil, 0).print_tree
+      print "\n\n"
     end
   end
 end
